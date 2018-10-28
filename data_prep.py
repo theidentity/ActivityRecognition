@@ -117,7 +117,8 @@ if __name__ == '__main__':
 
 	df = pd.read_csv('tmp/sub1.csv')
 	cols = df.columns
-	X = df.iloc[:,:-1].values
+	time = df.iloc[:,0].values
+	X = df.iloc[:,1:-1].values
 	y = df.iloc[:,-1].values
 
 	helpers.clear_folder('data/prep_data/')
