@@ -95,33 +95,33 @@ if __name__ == '__main__':
 
 	# PARSE RAW activities
 
-	data = read_data()
-	activities = split_activities(data)
-	parsed_activities = []
-	for activity in activities:
-		parsed_activity = parse_activity(activity)
-		parsed_activities.append(parsed_activity)
+	# data = read_data()
+	# activities = split_activities(data)
+	# parsed_activities = []
+	# for activity in activities:
+	# 	parsed_activity = parse_activity(activity)
+	# 	parsed_activities.append(parsed_activity)
 
-	parsed_activities = np.array(parsed_activities)
+	# parsed_activities = np.array(parsed_activities)
 
-	helpers.clear_folder('tmp/')
-	np.savez_compressed('tmp/sub1_parsed_activities.npz',activity=parsed_activities)
+	# helpers.clear_folder('tmp/')
+	# np.savez_compressed('tmp/sub1_parsed_activities.npz',activity=parsed_activities)
 
-	# SAVE in time vs sensor format
+	# # SAVE in time vs sensor format
 
-	parsed_activities = np.load('tmp/sub1_parsed_activities.npz')['activity']
-	df = merge_on_time_axis(parsed_activities[:])
-	df.to_csv('tmp/sub1.csv')
+	# parsed_activities = np.load('tmp/sub1_parsed_activities.npz')['activity']
+	# df = merge_on_time_axis(parsed_activities[:])
+	# df.to_csv('tmp/sub1.csv',compression='gzip')
 
 	# Save compressed numpy arrays
 
-	df = pd.read_csv('tmp/sub1.csv')
+	df = pd.read_csv('tmp/sub1.csv',compression='gzip')
 	cols = df.columns
-	time = df.iloc[:,0].values
+	time = df.iloc[:,0]
 	X = df.iloc[:,1:-1].values
 	y = df.iloc[:,-1].values
 
 	helpers.clear_folder('data/prep_data/')
 	save_path = 'data/prep_data/sub1.npz'
-	np.savez_compressed(save_path,x=X,y=y,col_names=cols)
+	np.savez_compressed(save_path,x=X,y=y,col_names=cols,time=time)
 	print('Compressed file saved to :',save_path)
