@@ -37,10 +37,10 @@ class ActivityRecognizer(object):
 
 		print(self.name)
 
-	def load_data(self):
+	def load_data(self,show_stats=False):
 
 		train_x,train_y,valid_x,valid_y = data_io.get_windowed_data(time_window=self.time_window,hold_out=self.hold_out_day,
-			use_saved=True,show_stats=False)
+			use_saved=True,show_stats=show_stats)
 
 		self.cws = compute_class_weight(class_weight='balanced', classes=np.unique(train_y), y=train_y)
 		print('Class Weights',self.cws)
@@ -99,7 +99,7 @@ class ActivityRecognizer(object):
 			callbacks=self.get_callbacks(),
 			validation_data=(valid_x,valid_y),
 			shuffle=True,
-			class_weight=self.cws,
+			# class_weight=self.cws,
 			initial_epoch=0,
 			steps_per_epoch=None,
 			validation_steps=None
@@ -133,6 +133,7 @@ class ActivityRecognizer(object):
 				aucs[i] = auc_score
 			else:
 				aucs[i] = 0.0
+			# print(aucs)
 
 		y_true = np.argmax(y_true,axis=1)
 		y_pred = np.argmax(y_pred_prob,axis=1)
@@ -156,7 +157,7 @@ class ActivityRecognizer(object):
 
 if __name__ == '__main__':
 
-	dates = list(range(27,32)) + list(range(1,12))
+	dates =  list(range(-1,0)) + list(range(27,32)) + list(range(1,12))
 	aucs_set = []
 
 	for i in dates:
@@ -171,3 +172,10 @@ if __name__ == '__main__':
 
 	aucs_set = np.load('tmp/aucs_set.npy')
 	print(np.mean(aucs_set,axis=0))
+
+
+	# clf = ActivityRecognizer(hold_out_day=-1)
+	# # clf.load_data(show_stats=True)
+	# clf.train_model(num_epochs=100,lr=1e-2)
+	# aucs = clf.evaluate(use_saved=False)
+	# # print(aucs)

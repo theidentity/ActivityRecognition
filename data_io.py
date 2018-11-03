@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 from scipy import stats
-
+from sklearn.model_selection import train_test_split
 
 def split_windows(x,y,time_window,filter_class=6):
 
@@ -23,7 +23,6 @@ def split_windows(x,y,time_window,filter_class=6):
 def get_windowed_data(time_window,hold_out,use_saved,show_stats):
 
 	dates = list(range(27,32)) + list(range(1,12))
-	assert(hold_out in dates)
 
 	if not use_saved:
 		df = pd.read_csv('data/prep_data/sub1_gzip.csv',compression='gzip')
@@ -77,13 +76,17 @@ def get_windowed_data(time_window,hold_out,use_saved,show_stats):
 	data = np.load('data/sub1_label_encoded.npz')
 	x,y,day = data['x'],data['y'],data['day']
 
-	idx = day!=hold_out
-	train_x,train_y = x[idx],y[idx]
-	idx = day==hold_out
-	test_x,test_y = x[idx],y[idx]
+	if hold_out in dates:
+		idx = day!=hold_out
+		train_x,train_y = x[idx],y[idx]
+		idx = day==hold_out
+		test_x,test_y = x[idx],y[idx]
+		train_x,train_y = split_windows(train_x,train_y,time_window=time_window,filter_class=6)
+		test_x,test_y = split_windows(test_x,test_y,time_window=time_window,filter_class=6)
+	else:
+		x,y = split_windows(x,y,time_window=time_window,filter_class=6)
+		train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=0.20, random_state=42)
 
-	train_x,train_y = split_windows(train_x,train_y,time_window=time_window,filter_class=6)
-	test_x,test_y = split_windows(test_x,test_y,time_window=time_window,filter_class=6)
 
 	if show_stats:
 		print(train_x.shape)
@@ -94,10 +97,10 @@ def get_windowed_data(time_window,hold_out,use_saved,show_stats):
 		print(test_y.shape)
 		print(np.unique(test_y,return_counts=True))
 
-
 	return train_x,train_y,test_x,test_y
 
 
 if __name__ == '__main__':
 
-	get_windowed_data(time_window=5,hold_out=31,use_saved=True)
+	get_windowed_data(time_window=5,hold_out=31,use_saved=True,show_stats=True)
+	get_windowed_data(time_window=5,hold_out=-1,use_saved=True,show_stats=True)
