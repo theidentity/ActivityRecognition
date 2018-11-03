@@ -3,9 +3,10 @@ import numpy as np
 import datetime
 from dateutil import parser
 import helpers
-
+from tqdm import tqdm
 
 sampling_freq = '1s'
+
 
 def read_data():
 	path = 'data/subject1/activities_data.csv'
@@ -65,8 +66,7 @@ def merge_on_time_axis(parsed_activities):
 	dts = []
 	sensors = []
 
-	for i,activity in enumerate(parsed_activities):
-		print(i)
+	for activity in tqdm(parsed_activities,desc='finding max and min'):
 		for sensor_activity in activity:
 			sensor_id,sensor_name,activity_name,sensor_dt_range,activity_dt_range = sensor_activity
 			sensors.append(sensor_id)	
@@ -74,16 +74,22 @@ def merge_on_time_axis(parsed_activities):
 			dts.append(max(sensor_dt_range))
 			dts.append(min(activity_dt_range))
 			dts.append(max(activity_dt_range))
-
+	
 	num_channels = np.unique(sensors)
-	time_index = pd.date_range(min(dts),max(dts),freq='1S')
+
+	min_time = min(dts)
+	min_time = min_time.round('D')
+
+	max_time = max(dts)
+	max_time = max_time.round('D')
+
+	time_index = pd.date_range(min_time,max_time,freq='1S')
 	cols = num_channels.tolist()+['activity']
 	df = pd.DataFrame(0,index=time_index,columns=cols)
 	df.index.name = 'time'
 	df.loc[:,'activity'] = 'no_activity'
 
-	for i,activity in enumerate(parsed_activities):
-		print(i)
+	for activity in tqdm(parsed_activities,desc='merging on time axis'):
 		for sensor_activity in activity:
 			sensor_id,sensor_name,activity_name,sensor_dt_range,activity_dt_range = sensor_activity
 			df.loc[sensor_dt_range,sensor_id] = 1
@@ -95,10 +101,11 @@ if __name__ == '__main__':
 
 	# PARSE RAW activities
 
+
 	# data = read_data()
 	# activities = split_activities(data)
 	# parsed_activities = []
-	# for activity in activities:
+	# for activity in tqdm(activities,desc='parsing activities'):
 	# 	parsed_activity = parse_activity(activity)
 	# 	parsed_activities.append(parsed_activity)
 
@@ -107,21 +114,17 @@ if __name__ == '__main__':
 	# helpers.clear_folder('tmp/')
 	# np.savez_compressed('tmp/sub1_parsed_activities.npz',activity=parsed_activities)
 
-	# # SAVE in time vs sensor format
+	# # # SAVE in time vs sensor format
 
 	# parsed_activities = np.load('tmp/sub1_parsed_activities.npz')['activity']
-	# df = merge_on_time_axis(parsed_activities[:])
-	# df.to_csv('tmp/sub1.csv',compression='gzip')
+	# df = merge_on_time_axis(parsed_activities)
+	# df.index = pd.to_datetime(df.index)
+	# df['day'] = df.index.day
 
-	# Save compressed numpy arrays
+	# helpers.clear_folder('data/prep_data')
+	# df.to_csv('data/prep_data/sub1_gzip.csv',compression='gzip')
+	# df.to_csv('data/prep_data/sub1_uncompressed.csv')
 
-	df = pd.read_csv('tmp/sub1.csv',compression='gzip')
-	cols = df.columns
-	time = df.iloc[:,0]
-	X = df.iloc[:,1:-1].values
-	y = df.iloc[:,-1].values
-
-	helpers.clear_folder('data/prep_data/')
-	save_path = 'data/prep_data/sub1.npz'
-	np.savez_compressed(save_path,x=X,y=y,col_names=cols,time=time)
-	print('Compressed file saved to :',save_path)
+	df = pd.read_csv('data/prep_data/sub1_gzip.csv',compression='gzip')
+	# print(df)
+	print(df.columns)
