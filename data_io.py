@@ -20,7 +20,7 @@ def split_windows(x,y,time_window,filter_class=6):
 
 	return x,y
 
-def get_windowed_data(time_window,hold_out,use_saved,show_stats):
+def get_windowed_data(time_window,hold_out,use_saved,show_stats,replace_cat=True):
 
 	dates = list(range(27,32)) + list(range(1,12))
 
@@ -61,7 +61,9 @@ def get_windowed_data(time_window,hold_out,use_saved,show_stats):
 			'no_activity' : 'no_activity' 
 		}
 
-		df['activity'] = df['activity'].replace(nine_cat)
+		if replace_cat:
+			df['activity'] = df['activity'].replace(nine_cat)
+
 		x = df.iloc[:,1:-2].values
 		y = df.iloc[:,-2].values
 		day = df.iloc[:,-1].values
